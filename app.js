@@ -19,7 +19,7 @@ const app = express();
 const PORT = process.env.PORT || 3001;
 
 // Lista de origens permitidas (ou '*' para permitir qualquer origem)
-const allowedOrigins = ['*', 'https://connecter-life.vercel.app'];
+const allowedOrigins = ['http://localhost:3000', 'https://connecter-life.vercel.app'];
 
 // Configuração do CORS
 const corsOptions = {
