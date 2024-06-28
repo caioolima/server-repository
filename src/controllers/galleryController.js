@@ -1,4 +1,5 @@
 const GalleryImage = require("../models/galleryImage");
+const Like = require("../models/like");
 const User = require("../models/userModel");
 
 // Adicionar uma imagem à galeria
@@ -98,6 +99,7 @@ exports.deleteGalleryImageByUrl = async (req, res) => {
 
 // Curtir uma imagem da galeria
 
+// Curtir uma imagem da galeria
 exports.likeGalleryImage = async (req, res) => {
   try {
     const { userId } = req.params;
@@ -109,12 +111,17 @@ exports.likeGalleryImage = async (req, res) => {
       return res.status(404).json({ success: false, message: "Gallery image not found." });
     }
 
-    if (image.likes.includes(likerId)) {
+    const existingLike = await Like.findOne({ userId: likerId, galleryImageId: image._id });
+    if (existingLike) {
       return res.status(400).json({ success: false, message: "You already liked this image." });
     }
 
-    image.likes.push(likerId);
-    await image.save();
+    const newLike = new Like({
+      userId: likerId,
+      galleryImageId: image._id
+    });
+
+    await newLike.save();
 
     return res.status(200).json({
       success: true,
@@ -141,13 +148,11 @@ exports.unlikeGalleryImage = async (req, res) => {
       return res.status(404).json({ success: false, message: "Gallery image not found." });
     }
 
-    const likerIndex = image.likes.indexOf(likerId);
-    if (likerIndex === -1) {
+    const existingLike = await Like.findOneAndDelete({ userId: likerId, galleryImageId: image._id });
+
+    if (!existingLike) {
       return res.status(400).json({ success: false, message: "You have not liked this image." });
     }
-
-    image.likes.splice(likerIndex, 1);
-    await image.save();
 
     return res.status(200).json({
       success: true,
@@ -162,6 +167,8 @@ exports.unlikeGalleryImage = async (req, res) => {
   }
 };
 
+
+// Verificar likes
 exports.checkLikes = async (req, res) => {
   try {
     const { imageUrl, targetUserId } = req.body;
@@ -172,13 +179,16 @@ exports.checkLikes = async (req, res) => {
       return res.status(404).json({ success: false, message: "Gallery image not found." });
     }
 
-    // Verificar se o ID do usuário alvo está presente na lista de IDs dos usuários que curtiram a imagem
-    const isLikedByUser = image.likes.includes(targetUserId);
+    const like = await Like.findOne({ userId: targetUserId, galleryImageId: image._id });
 
-    // Retornar a lista completa de IDs dos usuários que curtiram a imagem
-    const likedUserIds = image.likes;
+    const isLikedByUser = !!like;
+    const likedUserIds = await Like.find({ galleryImageId: image._id }).select('userId');
 
-    return res.status(200).json({ success: true, likedUserIds, isLikedByUser });
+    return res.status(200).json({
+      success: true,
+      likedUserIds: likedUserIds.map(like => like.userId),
+      isLikedByUser
+    });
   } catch (error) {
     console.error("Error checking likes:", error);
     return res.status(500).json({
@@ -192,18 +202,20 @@ exports.checkLikes = async (req, res) => {
 // Obter as imagens mais curtidas com pelo menos 1 like
 exports.getTopLikedImages = async (req, res) => {
   try {
-    // Buscar imagens que tenham pelo menos um like e popular o campo userId
-    const images = await GalleryImage.find({ 'likes.0': { $exists: true } })
-      .sort({ 'likes.length': -1 })
-      .limit(10)
-      .populate('userId', 'username profileImageUrl'); // Populando os campos username e profileImageUrl do usuário
+    // Buscar todas as imagens da galeria
+    const allImages = await GalleryImage.find().populate('userId', 'username profileImageUrl');
 
-    const topLikedImages = images.map(image => ({
-      ...image.toObject(),
-      likeCount: image.likes.length,
-      username: image.userId.username, // Adicionando o campo username ao objeto de imagem
-      profileImageUrl: image.userId.profileImageUrl // Adicionando o campo profileImageUrl ao objeto de imagem
+    // Adicionar a contagem de likes para cada imagem
+    const imagesWithLikes = await Promise.all(allImages.map(async (image) => {
+      const likeCount = await Like.countDocuments({ galleryImageId: image._id });
+      return { ...image.toObject(), likeCount };
     }));
+
+    // Filtrar as imagens que têm pelo menos um like e ordenar por contagem de likes
+    const topLikedImages = imagesWithLikes
+      .filter(image => image.likeCount > 0)
+      .sort((a, b) => b.likeCount - a.likeCount)
+      .slice(0, 10);
 
     return res.status(200).json({ success: true, topLikedImages });
   } catch (error) {
