@@ -88,6 +88,36 @@ exports.updateUserBiography = async (req, res) => {
   }
 };
 
+// Função para verificar se o usuário possui uma biografia
+exports.checkUserBiography = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    // Encontre o usuário pelo ID
+    const user = await User.findById(id);
+
+    if (!user) {
+      return res
+        .status(404)
+        .json({ success: false, message: "User not found." });
+    }
+
+    // Verifique se o usuário possui uma biografia
+    const hasBiography = !!user.biography;
+
+    return res.status(200).json({
+      success: true,
+      hasBiography: hasBiography,
+    });
+  } catch (error) {
+    console.error("Error checking user biography:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Internal server error while checking user biography.",
+    });
+  }
+};
+
 exports.addUserProfileImage = async (req, res) => {
   try {
     const { id } = req.params;

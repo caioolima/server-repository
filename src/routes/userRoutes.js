@@ -20,6 +20,13 @@ router.put(
   userController.updateUserBiography
 );
 
+// Rota para verificar se o usuário possui uma biografia
+router.get(
+  "/:id/check-biography",
+  middleware.checkAuthMiddleware,
+  userController.checkUserBiography
+);
+
 // Rota para deletar a biografia
 router.delete(
   "/:id/biography",
@@ -56,15 +63,9 @@ router.delete(
 );
 
 // Rota para encontrar todos os usuários
-router.get(
-  "/find/:username",
-  userController.findAllUsers
-);
+router.get("/find/:username", userController.findAllUsers);
 
 // Rota para obter todas as fotos de perfil por ID do usuário
-router.get(
-  "/:id/profile-images",
-  userController.getAllProfileImagesById
-);
+router.get("/:id/profile-images", userController.getAllProfileImagesById);
 
 module.exports = router;
