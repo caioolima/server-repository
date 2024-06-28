@@ -329,6 +329,7 @@ exports.updateUserLanguage = async (req, res) => {
   }
 };
 
+
 // Função para solicitar a exclusão de conta
 exports.requestAccountDeletion = async (req, res) => {
   const { userId } = req.body;
@@ -348,9 +349,7 @@ exports.requestAccountDeletion = async (req, res) => {
     const deletionDate = new Date(
       user.deletionRequestedAt.getTime() + 30 * 24 * 60 * 60 * 1000
     );
-    schedule.scheduleJob(deletionDate, async function () {
-      await User.deleteOne({ _id: userId });
-    });
+    // Aqui, agende a exclusão da conta usando a biblioteca apropriada, como agenda de tarefas ou eventos no banco de dados
 
     res.json({
       success: true,
@@ -359,8 +358,6 @@ exports.requestAccountDeletion = async (req, res) => {
     });
   } catch (error) {
     console.error("Erro ao solicitar exclusão de conta:", error);
-    res
-      .status(500)
-      .json({ error: "Erro interno ao solicitar exclusão de conta." });
+    res.status(500).json({ error: "Erro interno ao solicitar exclusão de conta." });
   }
 };
