@@ -12,7 +12,8 @@ const {
   listarComunidades,
   verificarMembroDaComunidade,
   contarMembrosDaComunidade,
-  obterComunidadesDoUsuario
+  obterComunidadesDoUsuario,
+  verificarExistenciaComunidadePorNome
 } = usuarioPaisController;
 
 // Rota para entrar na comunidade
@@ -52,6 +53,24 @@ router.post("/comunidade/criar/:country", async (req, res) => {
         message: "Comunidade criada com sucesso",
         communityId: newCommunityId,
       });
+  } catch (error) {
+    res.status(400).json({ error: error.message });
+  }
+});
+
+// Rota para verificar a existência de uma comunidade pelo nome
+router.get("/comunidade/verificarExistencia/:country", async (req, res) => {
+  const { country } = req.params;
+
+  try {
+    // Verifica se já existe uma comunidade com o mesmo nome (country)
+    const existeComunidade = await verificarExistenciaComunidadePorNome(country);
+
+    if (existeComunidade) {
+      res.status(200).json({ message: "Já existe uma comunidade com este nome" });
+    } else {
+      res.status(200).json({ message: "Comunidade disponível para criação" });
+    }
   } catch (error) {
     res.status(400).json({ error: error.message });
   }
