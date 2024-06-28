@@ -41,13 +41,11 @@ exports.registerUser = async (req, res) => {
         errors.phone = "Número de telefone já em uso.";
       }
 
-      return res
-        .status(400)
-        .json({
-          success: false,
-          errors,
-          message: "Falha ao registrar usuário.",
-        });
+      return res.status(400).json({
+        success: false,
+        errors,
+        message: "Falha ao registrar usuário.",
+      });
     }
 
     // Verifica se a senha e a confirmação de senha coincidem
@@ -82,8 +80,6 @@ exports.registerUser = async (req, res) => {
       .json({ success: false, error: "Erro interno ao registrar usuário." });
   }
 };
-
-// Função para fazer login
 exports.loginUser = async (req, res) => {
   try {
     const { email, password } = req.body;
@@ -95,8 +91,10 @@ exports.loginUser = async (req, res) => {
         .json({ error: "Email e senha são campos obrigatórios." });
     }
 
-    // Verifica se o usuário existe com o email fornecido
-    const user = await User.findOne({ email });
+    // Busca o usuário ignorando maiúsculas/minúsculas no email
+    const user = await User.findOne({
+      email: { $regex: new RegExp("^" + email.toLowerCase(), "i") },
+    });
 
     if (!user) {
       return res
@@ -119,11 +117,9 @@ exports.loginUser = async (req, res) => {
     res.status(200).json({ token, userId: user._id });
   } catch (error) {
     console.error("Erro durante o login:", error);
-    res
-      .status(500)
-      .json({
-        error: "Erro interno ao fazer login. Tente novamente mais tarde.",
-      });
+    res.status(500).json({
+      error: "Erro interno ao fazer login. Tente novamente mais tarde.",
+    });
   }
 };
 
@@ -132,11 +128,15 @@ exports.checkFieldAvailability = async (req, res) => {
     const { fieldName, value } = req.body;
 
     // Define os campos que requerem verificação de disponibilidade
-    const fieldsToCheck = ['username', 'email', 'phone'];
+    const fieldsToCheck = ["username", "email", "phone"];
 
     // Verifica se o campo fornecido requer verificação
     if (!fieldsToCheck.includes(fieldName)) {
-      return res.status(400).json({ error: 'Campo não suportado para verificação de disponibilidade.' });
+      return res
+        .status(400)
+        .json({
+          error: "Campo não suportado para verificação de disponibilidade.",
+        });
     }
 
     // Verifica se já existe um usuário com o valor fornecido no campo específico
@@ -145,11 +145,13 @@ exports.checkFieldAvailability = async (req, res) => {
     // Retorna se o campo está disponível ou não
     res.json({ available: !existingUser });
   } catch (error) {
-    console.error(`Erro ao verificar a disponibilidade de ${fieldName}:`, error);
+    console.error(
+      `Erro ao verificar a disponibilidade de ${fieldName}:`,
+      error
+    );
     res.status(500).json({ available: false }); // Em caso de erro, considerar como não disponível
   }
 };
-
 
 // Função para buscar e retornar o nome de usuário pelo ID
 exports.getUsernameById = async (req, res) => {
@@ -207,14 +209,12 @@ exports.requestPasswordReset = async (req, res) => {
     });
   } catch (error) {
     console.error("Erro ao solicitar redefinição de senha:", error);
-    res
-      .status(500)
-      .json({
-        error: "Erro interno ao solicitar redefinição de senha e código de verificação.",
-      });
+    res.status(500).json({
+      error:
+        "Erro interno ao solicitar redefinição de senha e código de verificação.",
+    });
   }
 };
-
 
 exports.verifyResetCode = async (req, res) => {
   const { email, code } = req.body;
@@ -247,10 +247,13 @@ exports.verifyResetCode = async (req, res) => {
     res.json({ success: true, message: "Código de verificação válido." });
   } catch (error) {
     console.error("Erro ao verificar o código de redefinição de senha:", error);
-    res.status(500).json({ error: "Erro interno ao verificar o código de redefinição de senha." });
+    res
+      .status(500)
+      .json({
+        error: "Erro interno ao verificar o código de redefinição de senha.",
+      });
   }
 };
-
 
 exports.resetPassword = async (req, res) => {
   const { email, password } = req.body;
@@ -289,7 +292,9 @@ exports.getUserLanguage = async (req, res) => {
     res.json({ language: user.language });
   } catch (error) {
     console.error("Erro ao buscar preferência de idioma:", error);
-    res.status(500).json({ error: "Erro interno ao buscar preferência de idioma." });
+    res
+      .status(500)
+      .json({ error: "Erro interno ao buscar preferência de idioma." });
   }
 };
 
@@ -306,9 +311,14 @@ exports.updateUserLanguage = async (req, res) => {
     user.language = language;
     await user.save();
 
-    res.json({ success: true, message: "Preferência de idioma atualizada com sucesso." });
+    res.json({
+      success: true,
+      message: "Preferência de idioma atualizada com sucesso.",
+    });
   } catch (error) {
     console.error("Erro ao atualizar preferência de idioma:", error);
-    res.status(500).json({ error: "Erro interno ao atualizar preferência de idioma." });
+    res
+      .status(500)
+      .json({ error: "Erro interno ao atualizar preferência de idioma." });
   }
 };

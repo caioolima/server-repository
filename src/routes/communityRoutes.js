@@ -1,23 +1,26 @@
-// communityRoutes.js
 const express = require("express");
 const router = express.Router();
 const usuarioPaisController = require("../controllers/communityController");
 const multer = require("multer"); // Importe o multer
 const upload = multer({ dest: "uploads/" });
 
-// Desestruture a função verificarMembroDaComunidade
-const { verificarMembroDaComunidade, contarMembrosDaComunidade } =
-  usuarioPaisController;
+// Desestruture a função verificarMembroDaComunidade e contarMembrosDaComunidade
+const {
+  entrarNaComunidade,
+  sairDaComunidade,
+  criarComunidade,
+  listarComunidades,
+  verificarMembroDaComunidade,
+  contarMembrosDaComunidade,
+  obterComunidadesDoUsuario
+} = usuarioPaisController;
 
 // Rota para entrar na comunidade
 router.post("/comunidade/entrar/:userId/:communityId", async (req, res) => {
   const { userId, communityId } = req.params;
 
   try {
-    const result = await usuarioPaisController.entrarNaComunidade(
-      userId,
-      communityId
-    );
+    const result = await entrarNaComunidade(userId, communityId);
     res.status(200).json({ message: result });
   } catch (error) {
     res.status(400).json({ error: error.message });
@@ -29,10 +32,7 @@ router.post("/comunidade/sair/:userId/:communityId", async (req, res) => {
   const { userId, communityId } = req.params;
 
   try {
-    const result = await usuarioPaisController.sairDaComunidade(
-      userId,
-      communityId
-    );
+    const result = await sairDaComunidade(userId, communityId);
     res.status(200).json({ message: result });
   } catch (error) {
     res.status(400).json({ error: error.message });
@@ -45,7 +45,7 @@ router.post("/comunidade/criar/:country", async (req, res) => {
   const { userId, image } = req.body; // Assumindo que o ID do usuário e a imagem são passados no corpo da requisição
 
   try {
-    const newCommunityId = await usuarioPaisController.criarComunidade(country, userId, image);
+    const newCommunityId = await criarComunidade(country, userId, image);
     res
       .status(201)
       .json({
@@ -60,7 +60,7 @@ router.post("/comunidade/criar/:country", async (req, res) => {
 // Rota para listar todas as comunidades
 router.get("/comunidade/listar", async (req, res) => {
   try {
-    const comunidades = await usuarioPaisController.listarComunidades();
+    const comunidades = await listarComunidades();
     res.status(200).json(comunidades);
   } catch (error) {
     res.status(400).json({ error: error.message });
@@ -98,25 +98,21 @@ router.get("/comunidade/contarMembros/:communityId", async (req, res) => {
 });
 
 // Rota para obter as comunidades do usuário
-router.get(
-  "/comunidade/obterComunidadesDoUsuario/:userId",
-  async (req, res) => {
-    const { userId } = req.params;
+router.get("/comunidade/obterComunidadesDoUsuario/:userId", async (req, res) => {
+  const { userId } = req.params;
 
-    try {
-      const comunidadesDoUsuario =
-        await usuarioPaisController.obterComunidadesDoUsuario(userId);
-      res.status(200).json(comunidadesDoUsuario);
-    } catch (error) {
-      res.status(400).json({ error: error.message });
-    }
+  try {
+    const comunidadesDoUsuario = await obterComunidadesDoUsuario(userId);
+    res.status(200).json(comunidadesDoUsuario);
+  } catch (error) {
+    res.status(400).json({ error: error.message });
   }
-);
-
+});
 
 // Função para validar o ID do usuário (exemplo, substitua pelo método adequado)
 function isValidUserId(userId) {
   // Implemente sua lógica de validação do ID do usuário aqui
   return true; // Por enquanto, apenas retornamos true para fins de exemplo
 }
+
 module.exports = router;
