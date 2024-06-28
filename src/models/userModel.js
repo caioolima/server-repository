@@ -14,7 +14,9 @@ const userSchema = new mongoose.Schema({
   resetPasswordToken: String,
   resetPasswordExpiry: Date,
   verificationCode: String,
-  language: { type: String, default: 'pt-BR' } // Adicionando a preferência de idioma
+  language: { type: String, default: 'pt-BR' },
+  deletionRequestedAt: { type: Date, default: null },
+  createdAt: { type: Date, default: Date.now } // Novo campo para data de criação
 });
 
 const User = mongoose.model('User', userSchema);

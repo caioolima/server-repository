@@ -3,10 +3,11 @@ const jwt = require("jsonwebtoken");
 const User = require("../models/userModel");
 const transporter = require("../config/mailer");
 const crypto = require("crypto");
-
+const schedule = require("node-schedule");
 const express = require("express");
 
 // Função para registrar usuário
+
 exports.registerUser = async (req, res) => {
   try {
     const {
@@ -71,7 +72,7 @@ exports.registerUser = async (req, res) => {
 
     await user.save();
 
-    // Alteração na resposta do backend
+    // Resposta do backend atualizada para retornar sucesso
     res.status(201).json({ success: true });
   } catch (error) {
     console.error(error);
@@ -110,7 +111,11 @@ exports.loginUser = async (req, res) => {
         .status(401)
         .json({ error: "Credenciais inválidas. Senha incorreta." });
     }
-
+    // Verifica se há uma solicitação de exclusão pendente e cancela
+    if (user.deletionRequestedAt) {
+      user.deletionRequestedAt = null;
+      await user.save();
+    }
     // Gera o token de autenticação
     const token = jwt.sign({ userId: user._id }, "seuSegredoDoToken");
 
@@ -132,11 +137,9 @@ exports.checkFieldAvailability = async (req, res) => {
 
     // Verifica se o campo fornecido requer verificação
     if (!fieldsToCheck.includes(fieldName)) {
-      return res
-        .status(400)
-        .json({
-          error: "Campo não suportado para verificação de disponibilidade.",
-        });
+      return res.status(400).json({
+        error: "Campo não suportado para verificação de disponibilidade.",
+      });
     }
 
     // Verifica se já existe um usuário com o valor fornecido no campo específico
@@ -163,6 +166,11 @@ exports.getUsernameById = async (req, res) => {
 
     if (!user) {
       return res.status(404).json({ error: "Usuário não encontrado" });
+    }
+
+    // Verifica se há uma solicitação de exclusão pendente
+    if (user.deletionRequestedAt) {
+      return res.status(404).json({ error: "Perfil não disponível" });
     }
 
     // Retorna o nome de usuário
@@ -247,11 +255,9 @@ exports.verifyResetCode = async (req, res) => {
     res.json({ success: true, message: "Código de verificação válido." });
   } catch (error) {
     console.error("Erro ao verificar o código de redefinição de senha:", error);
-    res
-      .status(500)
-      .json({
-        error: "Erro interno ao verificar o código de redefinição de senha.",
-      });
+    res.status(500).json({
+      error: "Erro interno ao verificar o código de redefinição de senha.",
+    });
   }
 };
 
@@ -320,5 +326,41 @@ exports.updateUserLanguage = async (req, res) => {
     res
       .status(500)
       .json({ error: "Erro interno ao atualizar preferência de idioma." });
+  }
+};
+
+// Função para solicitar a exclusão de conta
+exports.requestAccountDeletion = async (req, res) => {
+  const { userId } = req.body;
+
+  try {
+    const user = await User.findById(userId);
+
+    if (!user) {
+      return res.status(404).json({ error: "Usuário não encontrado." });
+    }
+
+    // Define a data da solicitação de exclusão para a data e hora atual
+    user.deletionRequestedAt = new Date();
+    await user.save();
+
+    // Agenda a exclusão da conta após 30 dias
+    const deletionDate = new Date(
+      user.deletionRequestedAt.getTime() + 30 * 24 * 60 * 60 * 1000
+    );
+    schedule.scheduleJob(deletionDate, async function () {
+      await User.deleteOne({ _id: userId });
+    });
+
+    res.json({
+      success: true,
+      message:
+        "Solicitação de exclusão de conta realizada com sucesso. A conta será deletada após 30 dias.",
+    });
+  } catch (error) {
+    console.error("Erro ao solicitar exclusão de conta:", error);
+    res
+      .status(500)
+      .json({ error: "Erro interno ao solicitar exclusão de conta." });
   }
 };

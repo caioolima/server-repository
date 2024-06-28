@@ -98,8 +98,6 @@ exports.deleteGalleryImageByUrl = async (req, res) => {
 };
 
 // Curtir uma imagem da galeria
-
-// Curtir uma imagem da galeria
 exports.likeGalleryImage = async (req, res) => {
   try {
     const { userId } = req.params;
