@@ -52,11 +52,12 @@ async function sairDaComunidade(userId, communityId) {
 async function criarComunidade(country, userId, image = null) {
     try {
         // Verifica se já existe uma comunidade com o mesmo país
-        const existingCommunity = await CommunityUser.findOne({ country });
-        if (existingCommunity) {
+        const existeComunidade = await verificarExistenciaComunidadePorNome(country);
+        if (existeComunidade) {
             throw new Error('Já existe uma comunidade com este nome');
         }
 
+        // Cria a nova comunidade
         const novaComunidade = new CommunityUser({ 
             country, 
             image 
@@ -74,6 +75,15 @@ async function criarComunidade(country, userId, image = null) {
     }
 }
 
+// Função para verificar se já existe uma comunidade com o mesmo nome
+async function verificarExistenciaComunidadePorNome(country) {
+    try {
+        const existingCommunity = await CommunityUser.findOne({ country });
+        return !!existingCommunity; // Retorna true se encontrar uma comunidade com o mesmo nome, false caso contrário
+    } catch (error) {
+        throw new Error('Erro ao verificar a existência da comunidade: ' + error.message);
+    }
+}
 
 // Função para listar todas as comunidades
 async function listarComunidades() {
@@ -132,4 +142,13 @@ async function obterComunidadesDoUsuario(userId) {
     }
 }
 
-module.exports = { entrarNaComunidade, sairDaComunidade, criarComunidade, listarComunidades, verificarMembroDaComunidade, contarMembrosDaComunidade, obterComunidadesDoUsuario };
+module.exports = {
+    entrarNaComunidade,
+    sairDaComunidade,
+    criarComunidade,
+    listarComunidades,
+    verificarMembroDaComunidade,
+    contarMembrosDaComunidade,
+    obterComunidadesDoUsuario,
+    verificarExistenciaComunidadePorNome 
+};
