@@ -1,5 +1,5 @@
 const GalleryImage = require("../models/galleryImage");
-const Like = require("../models/like")
+const Like = require("../models/like");
 const Relationship = require("../models/relationShip");
 const User = require("../models/userModel");
 const mongoose = require("mongoose");
@@ -94,7 +94,11 @@ exports.unlikeFeedImage = async (req, res) => {
         .json({ success: false, message: "You have not liked this image." });
     }
 
-    await existingLike.remove();
+    // Use deleteOne instead of remove
+    await Like.deleteOne({
+      userId: likerId,
+      galleryImageId: image._id,
+    });
 
     return res.status(200).json({
       success: true,
@@ -108,6 +112,8 @@ exports.unlikeFeedImage = async (req, res) => {
     });
   }
 };
+
+
 exports.checkFeedImageLikes = async (req, res) => {
   try {
     const { imageUrl } = req.body;
@@ -121,7 +127,9 @@ exports.checkFeedImageLikes = async (req, res) => {
         .json({ success: false, message: "Image not found." });
     }
 
-    const likes = await Like.find({ galleryImageId: image._id }).select("userId");
+    const likes = await Like.find({ galleryImageId: image._id }).select(
+      "userId"
+    );
     const likedUserIds = likes.map((like) => like.userId.toString()); // Converte ObjectId para string
     const isLikedByUser = likedUserIds.includes(userId); // Compara com userId como string
 
@@ -134,7 +142,6 @@ exports.checkFeedImageLikes = async (req, res) => {
     });
   }
 };
-
 
 exports.getLikedUsersNames = async (req, res) => {
   try {
@@ -203,12 +210,10 @@ exports.savePost = async (req, res) => {
       .json({ success: true, message: "Post saved successfully." });
   } catch (error) {
     console.error("Error saving post:", error);
-    return res
-      .status(500)
-      .json({
-        success: false,
-        message: "Internal server error while saving post.",
-      });
+    return res.status(500).json({
+      success: false,
+      message: "Internal server error while saving post.",
+    });
   }
 };
 
@@ -230,12 +235,10 @@ exports.deleteSavedPost = async (req, res) => {
       .json({ success: true, message: "Saved post deleted successfully." });
   } catch (error) {
     console.error("Error deleting saved post:", error);
-    return res
-      .status(500)
-      .json({
-        success: false,
-        message: "Internal server error while deleting saved post.",
-      });
+    return res.status(500).json({
+      success: false,
+      message: "Internal server error while deleting saved post.",
+    });
   }
 };
 
@@ -264,12 +267,10 @@ exports.getSavedPosts = async (req, res) => {
       .json({ success: true, savedPosts: populatedSavedPosts });
   } catch (error) {
     console.error("Error getting saved posts:", error);
-    return res
-      .status(500)
-      .json({
-        success: false,
-        message: "Internal server error while getting saved posts.",
-      });
+    return res.status(500).json({
+      success: false,
+      message: "Internal server error while getting saved posts.",
+    });
   }
 };
 
@@ -286,12 +287,10 @@ exports.checkSavedPost = async (req, res) => {
     return res.status(200).json({ success: true, isSaved });
   } catch (error) {
     console.error("Error checking saved post:", error);
-    return res
-      .status(500)
-      .json({
-        success: false,
-        message: "Internal server error while checking saved post.",
-      });
+    return res.status(500).json({
+      success: false,
+      message: "Internal server error while checking saved post.",
+    });
   }
 };
 
@@ -314,21 +313,17 @@ exports.addComment = async (req, res) => {
       { $push: { comments: newComment._id } }
     );
 
-    return res
-      .status(200)
-      .json({
-        success: true,
-        message: "Comment added successfully.",
-        comment: newComment,
-      });
+    return res.status(200).json({
+      success: true,
+      message: "Comment added successfully.",
+      comment: newComment,
+    });
   } catch (error) {
     console.error("Error adding comment:", error);
-    return res
-      .status(500)
-      .json({
-        success: false,
-        message: "Internal server error while adding comment.",
-      });
+    return res.status(500).json({
+      success: false,
+      message: "Internal server error while adding comment.",
+    });
   }
 };
 
@@ -347,12 +342,10 @@ exports.getComments = async (req, res) => {
     return res.status(200).json({ success: true, comments });
   } catch (error) {
     console.error("Error getting comments:", error);
-    return res
-      .status(500)
-      .json({
-        success: false,
-        message: "Internal server error while getting comments.",
-      });
+    return res.status(500).json({
+      success: false,
+      message: "Internal server error while getting comments.",
+    });
   }
 };
 
@@ -370,12 +363,10 @@ exports.deleteComment = async (req, res) => {
     }
 
     if (comment.userId.toString() !== userId) {
-      return res
-        .status(403)
-        .json({
-          success: false,
-          message: "You are not authorized to delete this comment.",
-        });
+      return res.status(403).json({
+        success: false,
+        message: "You are not authorized to delete this comment.",
+      });
     }
 
     await GalleryComment.deleteOne({ _id: commentId });
@@ -391,11 +382,9 @@ exports.deleteComment = async (req, res) => {
       .json({ success: true, message: "Comment deleted successfully." });
   } catch (error) {
     console.error("Error deleting comment:", error);
-    return res
-      .status(500)
-      .json({
-        success: false,
-        message: "Internal server error while deleting comment.",
-      });
+    return res.status(500).json({
+      success: false,
+      message: "Internal server error while deleting comment.",
+    });
   }
 };
