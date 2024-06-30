@@ -1,5 +1,5 @@
 const GalleryImage = require("../models/galleryImage");
-const Like = require('../models/like'); // Ajuste o caminho se necessário
+const Like = require("../models/like")
 const Relationship = require("../models/relationShip");
 const User = require("../models/userModel");
 const mongoose = require("mongoose");
@@ -108,11 +108,10 @@ exports.unlikeFeedImage = async (req, res) => {
     });
   }
 };
-
-// Verificar curtidas em uma imagem do feed
 exports.checkFeedImageLikes = async (req, res) => {
   try {
     const { imageUrl } = req.body;
+    const userId = req.params.userId; // Obtém o userId da URL
 
     const image = await GalleryImage.findOne({ url: imageUrl });
 
@@ -122,13 +121,9 @@ exports.checkFeedImageLikes = async (req, res) => {
         .json({ success: false, message: "Image not found." });
     }
 
-    const likes = await Like.find({ galleryImageId: image._id }).select(
-      "userId"
-    );
-    const likedUserIds = likes.map((like) => like.userId);
-    const isLikedByUser = likedUserIds.includes(
-      mongoose.Types.ObjectId(req.params.userId)
-    );
+    const likes = await Like.find({ galleryImageId: image._id }).select("userId");
+    const likedUserIds = likes.map((like) => like.userId.toString()); // Converte ObjectId para string
+    const isLikedByUser = likedUserIds.includes(userId); // Compara com userId como string
 
     return res.status(200).json({ success: true, likedUserIds, isLikedByUser });
   } catch (error) {
@@ -139,6 +134,7 @@ exports.checkFeedImageLikes = async (req, res) => {
     });
   }
 };
+
 
 exports.getLikedUsersNames = async (req, res) => {
   try {
