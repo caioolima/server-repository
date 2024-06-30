@@ -1,27 +1,23 @@
+// communityRoutes.js
 const express = require("express");
 const router = express.Router();
 const usuarioPaisController = require("../controllers/communityController");
 const multer = require("multer"); // Importe o multer
 const upload = multer({ dest: "uploads/" });
 
-// Desestruture a função verificarMembroDaComunidade e contarMembrosDaComunidade
-const {
-  entrarNaComunidade,
-  sairDaComunidade,
-  criarComunidade,
-  listarComunidades,
-  verificarMembroDaComunidade,
-  contarMembrosDaComunidade,
-  obterComunidadesDoUsuario,
-  verificarExistenciaComunidadePorNome
-} = usuarioPaisController;
+// Desestruture a função verificarMembroDaComunidade
+const { verificarMembroDaComunidade, contarMembrosDaComunidade } =
+  usuarioPaisController;
 
 // Rota para entrar na comunidade
 router.post("/comunidade/entrar/:userId/:communityId", async (req, res) => {
   const { userId, communityId } = req.params;
 
   try {
-    const result = await entrarNaComunidade(userId, communityId);
+    const result = await usuarioPaisController.entrarNaComunidade(
+      userId,
+      communityId
+    );
     res.status(200).json({ message: result });
   } catch (error) {
     res.status(400).json({ error: error.message });
@@ -33,7 +29,10 @@ router.post("/comunidade/sair/:userId/:communityId", async (req, res) => {
   const { userId, communityId } = req.params;
 
   try {
-    const result = await sairDaComunidade(userId, communityId);
+    const result = await usuarioPaisController.sairDaComunidade(
+      userId,
+      communityId
+    );
     res.status(200).json({ message: result });
   } catch (error) {
     res.status(400).json({ error: error.message });
@@ -46,7 +45,7 @@ router.post("/comunidade/criar/:country", async (req, res) => {
   const { userId, image } = req.body; // Assumindo que o ID do usuário e a imagem são passados no corpo da requisição
 
   try {
-    const newCommunityId = await criarComunidade(country, userId, image);
+    const newCommunityId = await usuarioPaisController.criarComunidade(country, userId, image);
     res
       .status(201)
       .json({
@@ -58,28 +57,10 @@ router.post("/comunidade/criar/:country", async (req, res) => {
   }
 });
 
-// Rota para verificar a existência de uma comunidade pelo nome
-router.get("/comunidade/verificarExistencia/:country", async (req, res) => {
-  const { country } = req.params;
-
-  try {
-    // Verifica se já existe uma comunidade com o mesmo nome (country)
-    const existeComunidade = await verificarExistenciaComunidadePorNome(country);
-
-    if (existeComunidade) {
-      res.status(200).json({ message: "Já existe uma comunidade com este nome" });
-    } else {
-      res.status(200).json({ message: "Comunidade disponível para criação" });
-    }
-  } catch (error) {
-    res.status(400).json({ error: error.message });
-  }
-});
-
 // Rota para listar todas as comunidades
 router.get("/comunidade/listar", async (req, res) => {
   try {
-    const comunidades = await listarComunidades();
+    const comunidades = await usuarioPaisController.listarComunidades();
     res.status(200).json(comunidades);
   } catch (error) {
     res.status(400).json({ error: error.message });
@@ -117,21 +98,25 @@ router.get("/comunidade/contarMembros/:communityId", async (req, res) => {
 });
 
 // Rota para obter as comunidades do usuário
-router.get("/comunidade/obterComunidadesDoUsuario/:userId", async (req, res) => {
-  const { userId } = req.params;
+router.get(
+  "/comunidade/obterComunidadesDoUsuario/:userId",
+  async (req, res) => {
+    const { userId } = req.params;
 
-  try {
-    const comunidadesDoUsuario = await obterComunidadesDoUsuario(userId);
-    res.status(200).json(comunidadesDoUsuario);
-  } catch (error) {
-    res.status(400).json({ error: error.message });
+    try {
+      const comunidadesDoUsuario =
+        await usuarioPaisController.obterComunidadesDoUsuario(userId);
+      res.status(200).json(comunidadesDoUsuario);
+    } catch (error) {
+      res.status(400).json({ error: error.message });
+    }
   }
-});
+);
+
 
 // Função para validar o ID do usuário (exemplo, substitua pelo método adequado)
 function isValidUserId(userId) {
   // Implemente sua lógica de validação do ID do usuário aqui
   return true; // Por enquanto, apenas retornamos true para fins de exemplo
 }
-
 module.exports = router;
