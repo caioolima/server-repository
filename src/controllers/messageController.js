@@ -1,17 +1,23 @@
-// messageController.js
 const Message = require('../models/messageModel');
 const CommunityUser = require('../models/communityModel');
+const UserCountry = require('../models/userCountryModel');
 
-// Função para enviar uma mensagem
 async function enviarMensagem(userId, communityId, message, media) {
     try {
+        // Verifica se a comunidade existe
         const community = await CommunityUser.findById(communityId);
         if (!community) {
             throw new Error('Comunidade não encontrada');
         }
 
-        // Verifica se o usuário está na comunidade
-        if (!community.userCountry.includes(userId)) {
+        // Verifica se o usuário está associado ao país da comunidade
+        const userCountry = await UserCountry.findOne({ userId });
+        if (!userCountry) {
+            throw new Error('Usuário não encontrado');
+        }
+
+        // Verifica se o país do usuário corresponde ao país da comunidade
+        if (userCountry.country !== community.country) {
             throw new Error('Usuário não está na comunidade');
         }
 
@@ -21,6 +27,7 @@ async function enviarMensagem(userId, communityId, message, media) {
             mediaUrl = media;
         }
 
+        // Cria uma nova mensagem
         const newMessage = new Message({
             userId,
             communityId, // Adiciona o ID da comunidade à mensagem
@@ -28,6 +35,7 @@ async function enviarMensagem(userId, communityId, message, media) {
             media: mediaUrl
         });
 
+        // Salva a nova mensagem no banco de dados
         await newMessage.save();
         return 'Mensagem enviada com sucesso';
     } catch (error) {
@@ -38,13 +46,14 @@ async function enviarMensagem(userId, communityId, message, media) {
 // Função para listar mensagens de uma comunidade
 async function listarMensagens(communityId) {
     try {
+        // Verifica se a comunidade existe
         const community = await CommunityUser.findById(communityId);
         if (!community) {
             throw new Error('Comunidade não encontrada');
         }
 
         // Busca todas as mensagens dessa comunidade
-        const messages = await Message.find({ communityId: communityId }).populate('userId', 'username');
+        const messages = await Message.find({ communityId }).populate('userId', 'username');
         return messages;
     } catch (error) {
         throw new Error('Erro ao listar as mensagens da comunidade: ' + error.message);
