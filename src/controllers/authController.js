@@ -200,26 +200,22 @@ exports.requestPasswordReset = async (req, res) => {
     user.verificationCode = verificationCode; // Salva o código de verificação no usuário
     await user.save();
 
-    const resetUrl = `https://connecter-life.vercel.app/newpassword/${resetToken}`;
-
     const mailOptions = {
       from: process.env.EMAIL_USER,
       to: user.email,
-      subject: "Redefinição de Senha e Código de Verificação", // Assunto do e-mail
-      text: `Você solicitou uma redefinição de senha. Clique no link a seguir para redefinir sua senha: ${resetUrl}. Se você não solicitou esta alteração, ignore este e-mail. Seu código de verificação é: ${verificationCode}`,
+      subject: "Código de Verificação para Redefinição de Senha", // Assunto do e-mail
+      text: `Você solicitou uma redefinição de senha. Seu código de verificação é: ${verificationCode}. Se você não solicitou esta alteração, ignore este e-mail.`,
     };
 
     await transporter.sendMail(mailOptions);
 
     res.json({
-      message:
-        "E-mail de redefinição de senha e código de verificação enviados com sucesso.",
+      message: "Código de verificação enviado com sucesso.",
     });
   } catch (error) {
     console.error("Erro ao solicitar redefinição de senha:", error);
     res.status(500).json({
-      error:
-        "Erro interno ao solicitar redefinição de senha e código de verificação.",
+      error: "Erro interno ao solicitar redefinição de senha.",
     });
   }
 };
@@ -329,7 +325,6 @@ exports.updateUserLanguage = async (req, res) => {
   }
 };
 
-
 // Função para solicitar a exclusão de conta
 exports.requestAccountDeletion = async (req, res) => {
   const { userId } = req.body;
@@ -358,6 +353,8 @@ exports.requestAccountDeletion = async (req, res) => {
     });
   } catch (error) {
     console.error("Erro ao solicitar exclusão de conta:", error);
-    res.status(500).json({ error: "Erro interno ao solicitar exclusão de conta." });
+    res
+      .status(500)
+      .json({ error: "Erro interno ao solicitar exclusão de conta." });
   }
 };
