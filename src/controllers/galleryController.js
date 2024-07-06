@@ -6,7 +6,7 @@ const User = require("../models/userModel");
 exports.addGalleryImage = async (req, res) => {
   try {
     const { userId } = req.params;
-    const { url } = req.body;
+    const { url, caption } = req.body; // Adicionar caption ao desestruturar o corpo da requisição
 
     if (!url) {
       return res.status(400).json({ success: false, message: "Image URL is required." });
@@ -19,6 +19,7 @@ exports.addGalleryImage = async (req, res) => {
 
     const newImage = new GalleryImage({
       url,
+      caption, // Adicionar caption ao criar a nova imagem
       userId
     });
 
@@ -58,7 +59,6 @@ exports.getGalleryImages = async (req, res) => {
     });
   }
 };
-
 
 // Deletar uma imagem da galeria pela URL
 exports.deleteGalleryImageByUrl = async (req, res) => {
