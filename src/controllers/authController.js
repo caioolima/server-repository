@@ -200,7 +200,7 @@ exports.requestPasswordReset = async (req, res) => {
     user.verificationCode = verificationCode; // Salva o código de verificação no usuário
     await user.save();
 
-    const resetUrl = `http://localhost:3001/newpassword/${resetToken}`;
+    const resetUrl = `https://connecter-life.vercel.app/newpassword/${resetToken}`;
 
     const mailOptions = {
       from: process.env.EMAIL_USER,

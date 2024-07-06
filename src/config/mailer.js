@@ -1,15 +1,12 @@
 const nodemailer = require('nodemailer');
 require('dotenv').config(); // Carregar variáveis de ambiente do arquivo .env
 
+// Crie um transportador usando o serviço SMTP do Outlook
 const transporter = nodemailer.createTransport({
-  service: 'Gmail',
+  service: 'Outlook365', // Ou 'hotmail', dependendo do serviço de e-mail
   auth: {
-    type: 'OAuth2',
-    user: process.env.GMAIL_USER,
-    pass: process.env.GMAIL_PASS,
-    clientId: process.env.GMAIL_CLIENT_ID,
-    clientSecret: process.env.GMAIL_CLIENT_SECRET,
-    refreshToken: process.env.GMAIL_REFRESH_TOKEN
+    user: process.env.EMAIL_USER,
+    pass: process.env.EMAIL_PASS,
   },
 });
 
