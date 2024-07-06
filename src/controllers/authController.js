@@ -203,8 +203,63 @@ exports.requestPasswordReset = async (req, res) => {
     const mailOptions = {
       from: process.env.EMAIL_USER,
       to: user.email,
-      subject: "Código de Verificação para Redefinição de Senha", // Assunto do e-mail
-      text: `Você solicitou uma redefinição de senha. Seu código de verificação é: ${verificationCode}. Se você não solicitou esta alteração, ignore este e-mail.`,
+      subject: "Código de Verificação para Redefinição de Senha",
+      html: `
+      <html>
+      <head>
+        <style>
+          @import url('https://fonts.googleapis.com/css2?family=Raleway:wght@100;400;500;600;700&display=swap');
+          body {
+            font-family: 'Raleway', sans-serif;
+            color: #333;
+            line-height: 1.6;
+            margin: 0;
+            padding: 0;
+            background-color: #f7f7f7;
+          }
+          .container {
+            max-width: 600px;
+            margin: auto;
+            padding: 20px;
+            border-radius: 8px;
+            background-color: #f70073;
+          }
+          h2 {
+            color: #000; /* Preto */
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.2);
+            font-weight: 700;
+            font-size: 24px;
+          }
+          p {
+            color: #fff; /* Branco */
+            font-weight: 700;
+            font-size: 16px;
+          }
+          .verification-code {
+            background-color: #fff;
+            padding: 10px;
+            border-radius: 5px;
+            color: #333;
+            text-align: center;
+            font-weight: 700;
+            font-size: 24px;
+          }
+        </style>
+      </head>
+      <body>
+        <div class="container">
+          <h2>Redefinição de Senha</h2>
+          <p>Olá,</p>
+          <p>Você solicitou uma redefinição de senha. Seu código de verificação é:</p>
+          <h3 class="verification-code">
+            ${verificationCode}
+          </h3>
+          <p>Se você não solicitou esta alteração, por favor, ignore este e-mail.</p>
+          <p>Atenciosamente,<br>Equipe Connecter Life</p>
+        </div>
+      </body>
+      </html>
+    `,
     };
 
     await transporter.sendMail(mailOptions);
