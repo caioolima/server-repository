@@ -151,27 +151,20 @@ exports.getLikedUsersNames = async (req, res) => {
     const image = await GalleryImage.findOne({ url: imageUrl });
 
     if (!image) {
-      return res
-        .status(404)
-        .json({ success: false, message: "Image not found." });
+      return res.status(404).json({ success: false, message: "Image not found." });
     }
 
-    // Extrair os IDs dos usuários que curtiram a imagem
-    const likedUserIds = image.likes;
+    // Encontrar todos os likes para a imagem
+    const likes = await Like.find({ galleryImageId: image._id }).populate('userId');
 
-    // Converter os IDs para ObjectId
-    const objectIdLikedUserIds = likedUserIds
-      .filter((id) => id.length === 24) // Filtrar IDs com comprimento correto
-      .map((id) => mongoose.Types.ObjectId.createFromHexString(id));
+    // Verifique o valor de likes
+    console.log('Likes:', likes);
 
-    // Encontrar os usuários com base nos IDs
-    const likedUsers = await User.find({ _id: { $in: objectIdLikedUserIds } });
-
-    // Extrair os nomes dos usuários
-    const likedUsersNames = likedUsers.map((user) => ({
-      userId: user._id,
-      username: user.username,
-      profileImageUrl: user.profileImageUrl,
+    // Extrair os detalhes dos usuários dos likes
+    const likedUsersNames = likes.map(like => ({
+      userId: like.userId._id,
+      username: like.userId.username,
+      profileImageUrl: like.userId.profileImageUrl,
     }));
 
     return res.status(200).json({ success: true, likedUsersNames });
@@ -183,7 +176,6 @@ exports.getLikedUsersNames = async (req, res) => {
     });
   }
 };
-
 // Controlador para salvar uma publicação
 exports.savePost = async (req, res) => {
   try {
