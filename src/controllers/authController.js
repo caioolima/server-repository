@@ -181,29 +181,44 @@ exports.getUsernameById = async (req, res) => {
   }
 };
 
+const languageMapping = {
+  'en-US': 'en',
+  'pt-BR': 'pt',
+  'es-ES': 'es',
+  // Adicione outras mapeações conforme necessário
+};
+
 exports.requestPasswordReset = async (req, res) => {
-  const { email } = req.body;
+  const { email, language = 'en-US' } = req.body;
 
   try {
     const user = await User.findOne({ email });
 
     if (!user) {
-      return res.status(404).json({ error: "Usuário não encontrado." });
+      return res.status(404).json({ error: 'User not found.' });
     }
 
-    const resetToken = crypto.randomBytes(32).toString("hex");
-    const resetTokenExpiry = Date.now() + 3600000; // 1 hora
-    const verificationCode = Math.floor(100000 + Math.random() * 900000); // Gera um código de verificação de 6 dígitos
+    const resetToken = crypto.randomBytes(32).toString('hex');
+    const resetTokenExpiry = Date.now() + 3600000; // 1 hour
+    const verificationCode = Math.floor(100000 + Math.random() * 900000); // 6-digit verification code
 
     user.resetPasswordToken = resetToken;
     user.resetPasswordExpiry = resetTokenExpiry;
-    user.verificationCode = verificationCode; // Salva o código de verificação no usuário
+    user.verificationCode = verificationCode; // Save verification code to the user
     await user.save();
+
+    const normalizedLanguage = languageMapping[language] || language;
+    const validLanguages = ['en', 'pt', 'es'];
+    if (!validLanguages.includes(normalizedLanguage)) {
+      return res.status(400).json({ error: 'Invalid language.' });
+    }
 
     const mailOptions = {
       from: process.env.EMAIL_USER,
       to: user.email,
-      subject: "Código de Verificação para Redefinição de Senha",
+      subject: normalizedLanguage === 'pt' ? 'Código de Verificação para Redefinição de Senha' : 
+               normalizedLanguage === 'es' ? 'Código de Verificación para Restablecimiento de Contraseña' : 
+               'Password Reset Verification Code',
       html: `
       <html>
       <head>
@@ -222,16 +237,18 @@ exports.requestPasswordReset = async (req, res) => {
             margin: auto;
             padding: 20px;
             border-radius: 8px;
-            background-color: #f70073;
+            background-color: ${normalizedLanguage === 'pt' ? '#f70073' : 
+                                normalizedLanguage === 'es' ? '#f70073' : 
+                                '#ea4f97'};
           }
           h2 {
-            color: #000; /* Preto */
+            color: #000;
             text-shadow: 1px 1px 2px rgba(0,0,0,0.2);
             font-weight: 700;
             font-size: 24px;
           }
           p {
-            color: #fff; /* Branco */
+            color: #fff;
             font-weight: 700;
             font-size: 16px;
           }
@@ -248,14 +265,24 @@ exports.requestPasswordReset = async (req, res) => {
       </head>
       <body>
         <div class="container">
-          <h2>Redefinição de Senha</h2>
-          <p>Olá,</p>
-          <p>Você solicitou uma redefinição de senha. Seu código de verificação é:</p>
+          <h2>${normalizedLanguage === 'pt' ? 'Redefinição de Senha' : 
+                 normalizedLanguage === 'es' ? 'Restablecimiento de Contraseña' : 
+                 'Password Reset'}</h2>
+          <p>${normalizedLanguage === 'pt' ? 'Olá,' : 
+                 normalizedLanguage === 'es' ? 'Hola,' : 
+                 'Hello,'}</p>
+          <p>${normalizedLanguage === 'pt' ? 'Você solicitou uma redefinição de senha. Seu código de verificação é:' : 
+                 normalizedLanguage === 'es' ? 'Ha solicitado un restablecimiento de contraseña. Su código de verificación es:' : 
+                 'You requested a password reset. Your verification code is:'}</p>
           <h3 class="verification-code">
             ${verificationCode}
           </h3>
-          <p>Se você não solicitou esta alteração, por favor, ignore este e-mail.</p>
-          <p>Atenciosamente,<br>Equipe Connecter Life</p>
+          <p>${normalizedLanguage === 'pt' ? 'Se você não solicitou esta alteração, por favor, ignore este e-mail.' : 
+                 normalizedLanguage === 'es' ? 'Si no solicitó este cambio, por favor ignore este correo electrónico.' : 
+                 'If you did not request this change, please ignore this email.'}</p>
+          <p>${normalizedLanguage === 'pt' ? 'Atenciosamente,<br>Equipe Connecter Life' : 
+                 normalizedLanguage === 'es' ? 'Atentamente,<br>Equipo Connecter Life' : 
+                 'Best regards,<br>Connecter Life Team'}</p>
         </div>
       </body>
       </html>
@@ -265,12 +292,14 @@ exports.requestPasswordReset = async (req, res) => {
     await transporter.sendMail(mailOptions);
 
     res.json({
-      message: "Código de verificação enviado com sucesso.",
+      message: normalizedLanguage === 'pt' ? 'Código de verificação enviado com sucesso.' : 
+               normalizedLanguage === 'es' ? 'Código de verificación enviado con éxito.' : 
+               'Verification code sent successfully.',
     });
   } catch (error) {
-    console.error("Erro ao solicitar redefinição de senha:", error);
+    console.error('Error requesting password reset:', error);
     res.status(500).json({
-      error: "Erro interno ao solicitar redefinição de senha.",
+      error: 'Internal error requesting password reset.',
     });
   }
 };

@@ -11,6 +11,7 @@ const routes = require('./src/routes');
 const galleryRoutes = require('./src/routes/galleryRoutes');
 const messageRoutes = require('./src/routes/messageRoutes');
 const feedRoutes = require('./src/routes/feedRoutes');
+const featureRequestsRoutes = require('./src/routes/featureRotes'); 
 const notificationRoutes = require('./src/routes/notificationRoutes')
 // Configuração do CORS
 const cors = require('cors');
@@ -57,4 +58,5 @@ app.use('/message', messageRoutes);
 app.use('/gallery', galleryRoutes);
 app.use('/feedRoutes', feedRoutes)
 app.use('/notificationRoutes', notificationRoutes)
+app.use('/feature-requests', featureRequestsRoutes);
 app.use(routes);
