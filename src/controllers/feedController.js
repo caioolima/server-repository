@@ -5,6 +5,7 @@ const User = require("../models/userModel");
 const mongoose = require("mongoose");
 const SavedPost = require("../models/savedPost");
 const GalleryComment = require("../models/galleryComment");
+const Notification = require("../models/notification");
 
 exports.getFeed = async (req, res) => {
   const userId = req.params.userId;
@@ -57,6 +58,15 @@ exports.likeFeedImage = async (req, res) => {
     const newLike = new Like({ userId: likerId, galleryImageId: image._id });
     await newLike.save();
 
+    // Criar notificação
+    const liker = await User.findById(likerId);
+    const newNotification = new Notification({
+      userId: image.userId, // O dono da imagem recebe a notificação
+      type: 'like',
+      referenceId: likerId,
+    });
+    await newNotification.save();
+
     return res.status(200).json({
       success: true,
       message: "Image liked successfully.",
@@ -69,6 +79,7 @@ exports.likeFeedImage = async (req, res) => {
     });
   }
 };
+
 
 // Descurtir uma imagem do feed
 exports.unlikeFeedImage = async (req, res) => {
@@ -181,7 +192,6 @@ exports.savePost = async (req, res) => {
   try {
     const { userId, postOwnerId, imageUrl } = req.body;
 
-    // Verificar se a publicação já foi salva pelo usuário
     const existingSavedPost = await SavedPost.findOne({
       userId,
       postOwnerId,
@@ -193,9 +203,17 @@ exports.savePost = async (req, res) => {
         .json({ success: false, message: "Post already saved." });
     }
 
-    // Criar um novo documento de savedPost
     const newSavedPost = new SavedPost({ userId, postOwnerId, imageUrl });
     await newSavedPost.save();
+
+    // Criar notificação
+    const saver = await User.findById(userId);
+    const newNotification = new Notification({
+      userId: postOwnerId, // O dono do post recebe a notificação
+      type: 'save',
+      referenceId: userId,
+    });
+    await newNotification.save();
 
     return res
       .status(200)
@@ -208,6 +226,7 @@ exports.savePost = async (req, res) => {
     });
   }
 };
+
 
 exports.deleteSavedPost = async (req, res) => {
   try {
@@ -305,6 +324,16 @@ exports.addComment = async (req, res) => {
       { $push: { comments: newComment._id } }
     );
 
+    // Criar notificação
+    const commenter = await User.findById(userId);
+    const image = await GalleryImage.findOne({ url: imageUrl });
+    const newNotification = new Notification({
+      userId: image.userId, // O dono da imagem recebe a notificação
+      type: 'comment',
+      referenceId: userId,
+    });
+    await newNotification.save();
+
     return res.status(200).json({
       success: true,
       message: "Comment added successfully.",
@@ -318,6 +347,7 @@ exports.addComment = async (req, res) => {
     });
   }
 };
+
 
 // Função para obter comentários de uma imagem
 exports.getComments = async (req, res) => {

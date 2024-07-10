@@ -1,6 +1,7 @@
 const GalleryImage = require("../models/galleryImage");
 const Like = require("../models/like");
 const User = require("../models/userModel");
+const Notification = require("../models/notification");
 
 // Adicionar uma imagem à galeria
 exports.addGalleryImage = async (req, res) => {
@@ -120,6 +121,15 @@ exports.likeGalleryImage = async (req, res) => {
     });
 
     await newLike.save();
+
+    // Criar uma notificação para o proprietário da imagem
+    const newNotification = new Notification({
+      userId, // Usuário que receberá a notificação
+      type: 'like',
+      referenceId: likerId // Usuário que deu o like
+    });
+
+    await newNotification.save();
 
     return res.status(200).json({
       success: true,

@@ -2,30 +2,28 @@ const Relationship = require("../models/relationShip");
 const User = require("../models/userModel")
 const express = require("express");
 
+const Notification = require('../models/notification'); // Importe o modelo Notification
+
 exports.followUser = async (req, res) => {
   const { follower_id, following_id } = req.body;
 
   try {
-    // Verificar se já existe uma relação entre o seguidor e o usuário seguido
-    const existingRelationship = await Relationship.findOne({
-      follower_id,
-      following_id,
-    });
+    const existingRelationship = await Relationship.findOne({ follower_id, following_id });
 
     if (existingRelationship) {
-      return res
-        .status(400)
-        .json({ error: "Você já está seguindo este usuário" });
+      return res.status(400).json({ error: "Você já está seguindo este usuário" });
     }
 
-    // Criação de uma nova instância de Relationship
-    const newRelationship = new Relationship({
-      follower_id,
-      following_id,
-    });
-
-    // Salvar a nova relação no banco de dados
+    const newRelationship = new Relationship({ follower_id, following_id });
     await newRelationship.save();
+
+    // Criar uma nova notificação para o usuário seguido
+    const notification = new Notification({
+      userId: following_id,
+      type: 'follow',
+      referenceId: follower_id
+    });
+    await notification.save();
 
     res.status(200).json(newRelationship);
   } catch (error) {
