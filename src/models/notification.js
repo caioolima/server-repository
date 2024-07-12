@@ -2,10 +2,10 @@ const mongoose = require('mongoose');
 
 const notificationSchema = new mongoose.Schema({
   userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
+  referenceId: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
   type: { type: String, required: true },
-  referenceId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
-}, {
-  timestamps: true // Adiciona createdAt e updatedAt automaticamente
+  createdAt: { type: Date, default: Date.now },
+  read: { type: Boolean, default: false }
 });
 
 module.exports = mongoose.model('Notification', notificationSchema);
