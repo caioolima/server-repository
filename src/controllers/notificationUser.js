@@ -53,36 +53,20 @@ exports.getNotificationTypesAndUsers = async (req, res) => {
   }
 };
 
-// Função para obter notificações não lidas e marcar como lidas
+// Função para obter notificações não lidas
 exports.getUnreadNotifications = async (req, res) => {
   try {
     const { userId } = req.params;
 
-    // Obtém todas as notificações do usuário
-    const notifications = await Notification.find({ userId })
+    // Obtenha todas as notificações do usuário que não foram lidas
+    const notifications = await Notification.find({ userId, read: false })
       .populate({
-        path: 'referenceId', // O usuário que fez a ação
-        select: 'username profileImageUrl', // Inclui o campo profileImageUrl
+        path: 'referenceId',
+        select: 'username profileImageUrl',
       })
       .sort({ createdAt: -1 });
 
-    // Filtra as notificações em que referenceId é diferente de userId
-    const filteredNotifications = notifications.filter(notification => {
-      return notification.referenceId && notification.referenceId._id.toString() !== userId;
-    });
-
-    // Obtém apenas as notificações não lidas
-    const unreadNotifications = filteredNotifications.filter(notification => !notification.read);
-
-    // Marca todas as notificações não lidas como lidas
-    await Promise.all(unreadNotifications.map(async notification => {
-      notification.read = true;
-      await notification.save();
-    }));
-
-    console.log('Unread notifications:', unreadNotifications); // Log para depuração
-
-    const formattedNotifications = unreadNotifications.map(notification => ({
+    const formattedNotifications = notifications.map(notification => ({
       type: notification.type,
       username: notification.referenceId ? notification.referenceId.username : 'Unknown',
       profileImageUrl: notification.referenceId ? notification.referenceId.profileImageUrl : 'Unknown',
@@ -91,10 +75,31 @@ exports.getUnreadNotifications = async (req, res) => {
 
     res.status(200).json({ success: true, notifications: formattedNotifications });
   } catch (error) {
-    console.error('Error getting or marking notifications as read:', error);
+    console.error('Error getting unread notifications:', error);
     res.status(500).json({
       success: false,
-      message: 'Internal server error while getting or marking notifications as read.',
+      message: 'Internal server error while getting unread notifications.',
+    });
+  }
+};
+
+// Função para marcar notificações como lidas
+exports.markNotificationsAsRead = async (req, res) => {
+  try {
+    const { userId } = req.params;
+
+    // Encontre todas as notificações não lidas para o usuário
+    const notifications = await Notification.updateMany(
+      { userId, read: false },
+      { $set: { read: true } }
+    );
+
+    res.status(200).json({ success: true, message: 'Notifications marked as read.' });
+  } catch (error) {
+    console.error('Error marking notifications as read:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Internal server error while marking notifications as read.',
     });
   }
 };
