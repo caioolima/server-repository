@@ -20,8 +20,8 @@ Este repositório contém o backend da Connecter Life, uma rede social para moch
 - MongoDB instalado e rodando.
 
 ** Instalação
-- Clone o repositório do backend: git clone https://github.com/seu-usuario/connecter-life-backend.git
-- Navegue até o diretório do projeto: cd backend
+- Clone o repositório do backend: git clone https://github.com/caioolima/server-repository
+- Navegue até o diretório do projeto: cd server-repository
 - Instale as dependências: npm install
 
 ** Teste a aplicação
