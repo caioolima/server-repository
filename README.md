@@ -1,4 +1,5 @@
-Connecter Life - Backend
+## Connecter Life - Backend
+
 Este repositório contém o backend da Connecter Life, uma rede social para mochileiros e viajantes. O backend gerencia as APIs, autenticação de usuários, e armazenamento de dados, incluindo comunidades, chats e histórico de atividades.
 
 ## Tecnologias Utilizadas
