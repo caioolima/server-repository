@@ -27,4 +27,4 @@ Este repositório contém o backend da Connecter Life, uma rede social para moch
 ** Teste a aplicação
   - npm start
   - 
-A API estará disponível em http://localhost:5000
+A API estará disponível em http://localhost:3001
